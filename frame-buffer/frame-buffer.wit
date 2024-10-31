@@ -1,7 +1,11 @@
-package wasi:webgpu;
+package wasi:frame-buffer;
+
+world imports {
+  import frame-buffer;
+}
 
 interface frame-buffer {
-  use graphics-context.{context, abstract-buffer};
+  use wasi:graphics-context/graphics-context.{context, abstract-buffer};
 
   resource device {
     constructor();

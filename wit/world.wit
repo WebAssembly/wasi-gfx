@@ -1,8 +1,0 @@
-package wasi:webgpu;
-
-world imports {
-  import webgpu;
-  import graphics-context;
-  import surface;
-  import frame-buffer;
-}

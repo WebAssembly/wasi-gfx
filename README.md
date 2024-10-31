@@ -1,4 +1,4 @@
-# WASI WebGPU+
+# WASI-GFX
 
 A proposed [WebAssembly System Interface](https://github.com/WebAssembly/WASI) API.
 
@@ -15,7 +15,7 @@ Phase 1
 
 |          | Linux | Window | MacOS | Android | Web |
 | -------- | ----- | ------ | ----- | ------- | --- |
-| Wasmtime | ✅    | ✅     | ✅     | ✅      |     |
+| Wasmtime | ✅    | ✅     | ✅    | ✅      |     |
 | Jco      |       |        |       |         | ✅  |
 
 ## Table of Contents [if the explainer is longer than one printed page]

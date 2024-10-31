@@ -12,9 +12,11 @@ Phase 1
 - Sean Isom 
 
 ### Portability Criteria
-WASI GFX must have host implementations which can pass the testsuite on at least Windows, macOS, and Linux.
 
-WASI GFX must have at least two complete independent implementations.
+|          | Linux | Window | MacOS | Android | Web |
+| -------- | ----- | ------ | ----- | ------- | --- |
+| Wasmtime | ✅    | ✅     | ✅     | ✅      |     |
+| Jco      |       |        |       |         | ✅  |
 
 ## Table of Contents [if the explainer is longer than one printed page]
 
@@ -64,6 +66,12 @@ The full API documentation can be found in [imports.md](imports.md).
 
 #### `wasi:webgpu`
 
+
+|                         | Description                                   |
+| ------------------------| ----------------------------------------------------- |
+| `wasi:webgpu`           | WebGPU package for interacting with GPUs               |
+| `wasi:frame-buffer`     | A CPU based graphics API                               |
+| `wasi:surface`          | A surface                                              |
 `wasi:webgpu` is based on the official [webgpu spec](https://www.w3.org/TR/webgpu/).
 
 `wasi:webgpu` does deviate sometimes from the webgpu spec, namely, in cases where the spec makes assumptions about running in a web or JS environment. Wherever `wasi:webgpu` deviates from the spec, a clear explanation should be documented.

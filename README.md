@@ -4,7 +4,7 @@ A proposed [WebAssembly System Interface](https://github.com/WebAssembly/WASI) A
 
 ### Current Phase
 
-Phase 1
+Phase 2
 
 ### Champions
 
@@ -13,10 +13,7 @@ Phase 1
 
 ### Portability Criteria
 
-|          | Linux | Window | MacOS | Android | Web |
-| -------- | ----- | ------ | ----- | ------- | --- |
-| Wasmtime | ✅    | ✅     | ✅    | ✅      |     |
-| Jco      |       |        |       |         | ✅  |
+Linux, Window, MacOS, Android, Web.
 
 ## Table of Contents [if the explainer is longer than one printed page]
 

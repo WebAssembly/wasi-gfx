@@ -1,0 +1,230 @@
+package wasi:webgpu;
+
+interface window {
+    use graphics-context.{graphics-context};
+    use wasi:io/poll@0.2.0.{pollable};
+    
+    
+    /// https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values
+    enum key-code {
+        // TODO is this needed? I don't think the MVP needs key codes.
+        unidentified,
+    }
+    
+    /// https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values#document_keys
+    /// Excerpt of the most useful keys.
+    enum special-key {
+       alt,
+       alt-graph,
+       caps-lock,
+       ctrl,
+       meta,
+       num-lock,
+       scroll-lock,
+       shift,
+       
+       arrow-down,
+       arrow-left,
+       arrow-right,
+       arrow-up,
+       end,
+       home,
+       page-down,
+       page-up,
+       
+       backspace,
+       clear,
+       delete,
+       insert,
+       paste,
+       
+       context-menu,
+       escape,
+       pause,
+       
+       brightness-down,
+       brightness-up,
+       print,
+       
+       f1,
+       f2,
+       f3,
+       f4,
+       f5,
+       f6,
+       f7,
+       f8,
+       f9,
+       f10,
+       f11,
+       f12,
+       f13,
+       f14,
+       f15,
+       f16,
+       f17,
+       f18,
+       f19,
+       f20,
+       
+       app-switch,
+       
+       channel-down,
+       channel-up,
+       fast-forward,
+       media-pause,
+       media-play,
+       media-play-pause,
+       media-record,
+       media-rewind,
+       media-stop,
+       media-track-next,
+       media-track-previous,
+       
+       audio-volume-down,
+       audio-volume-up,
+       audio-volume-mute,
+    }
+    
+    flags modifiers {
+        ctrl,
+        alt,
+        alt-graph,
+        shift,
+        caps-lock,
+        meta,
+    }
+    
+    /// Describes the key location on the keyboard, for keys that appear more than once on a keyboard.
+    enum key-location {
+        standard,
+        left,
+        right,
+        numpad,
+    }
+    
+    variant key {
+        /// The key has an associated Unicode scalar value.
+        character(u32),
+        /// The key is a key without a Unicode scalar value.
+        special(special-key),
+        /// A dead key was pressed. The next key event will contain the combined character.
+        dead,
+        /// The key could not be identified.
+        unidentified,
+    }
+    
+    
+    record key-data {
+        modifiers: modifiers,
+        key: key,
+        code: key-code,
+        location: key-location,
+        repeat: bool,
+    }
+    
+    flags mouse-buttons {
+        left,
+        middle,
+        right,
+    }
+    
+    record mouse {
+        position: position,
+        buttons: mouse-buttons,
+    }
+    
+    record wheel {
+        mouse: mouse,
+        x: f32,
+        y: f32,
+    }
+    
+    
+    /// Window system capabilities that are supported.
+    /// Methods that use unsupported capabilities will trap in WASM.
+    flags capabilities {
+        /// The windows have a title that can be set.
+        title,
+        /// The windows have position on a display which can be moved by the program. Not given e.g. on the web, where position is handled by CSS.
+        position,
+        // The windows have icons which can be set by the program.
+        icon,
+        /// Windows can request to go into fullscreen mode. This capability not being present can mean fullscreen windows
+        /// are not supported, or the window is forced fullscreen.
+        fullscreen,
+        /// Whether windows are resizable, be it by the user or the program itself.
+        size,
+    }
+    
+    
+    record position {
+        x: u16,
+        y: u16,
+    }
+    
+    record size {
+        width: u16,
+        height: u16,
+    }
+    
+    record create-desc {
+        title: string,
+        position: position,
+        size: size,
+        visible: bool,
+    }
+    
+    /// Checks whether window functionality is available at all in the runtime.
+    available: func() -> bool;
+
+    resource window {
+        constructor(desc: create-desc);
+        
+        connect-graphics-context: func(context: borrow<graphics-context>);
+        
+        set-title: func(title: string);
+        get-title: func() -> string;
+        
+        // TODO add a display interface for querying the displays, so programs can see the resolution and find out where on which screen the window is.
+        set-position: func(position: position);
+        get-position: func() -> position;
+        
+        set-size: func(size: size);
+        get-size: func() -> size;
+        
+        /// Sets the visibility of the window.
+        set-visible: func(visible: bool);
+        
+        subscribe-resize: func() -> pollable;
+        get-resize: func() -> option<size>;
+        
+        subscribe-reposition: func() -> pollable;
+        get-reposition: func() -> option<position>;
+        
+        
+        subscribe-key-down: func() -> pollable;
+        get-key-down: func() -> option<key>;
+        
+        subscribe-key-up: func() -> pollable;
+        get-key-up: func() -> option<key>;
+        
+        
+        subscribe-mouse-down: func() -> pollable;
+        get-mouse-down: func() -> option<mouse>;
+        
+        subscribe-mouse-up: func() -> pollable;
+        get-mouse-up: func() -> option<mouse>;
+        
+        subscribe-mouse-move: func() -> pollable;
+        get-mouse-move: func() -> option<mouse>;
+        
+        subscribe-wheel: func() -> pollable;
+        get-wheel: func() -> option<wheel>;
+        
+        
+        // If the pollable is ready, that means a close event has occurred. Since there is no data, ther e is no need
+        // for a get function, and the ready status should be cleared on query.
+        subscribe-close: func() -> pollable;
+    }
+}

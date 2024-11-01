@@ -1,0 +1,37 @@
+package wasi:webgpu;
+
+
+/// The raw-display interface is designed for when an application has raw access to the full display framebuffer, such as on an embedded device.
+interface raw-display {
+    
+    enum framebuffer-format {
+        rgb888,
+    }
+    
+    /// Gets information on the connected displays.
+    displays: func() -> list<display-info>;
+    
+    
+    record display-info {
+        /// Internal id for the display, used to connect a grapics-context.
+        id: u32,
+        /// An implementation defined identifier of the display. Should be unique.
+        /// This is so that an application can differentiate e.g. between front and back screens on a device.
+        name: string,
+        width: u32,
+        height: u32,
+        /// The framebuffer format used.
+        format: framebuffer-format,
+        /// Whether the drawing is done in the main framebuffer or in a back buffer.
+        /// When drawing in a back buffer, blitting is neccessary.
+        back-buffer: bool,
+    }
+    
+    /// Connects a graphics context to a fisplay.
+    connect-graphics-context: func(context: borrow<graphics-context>, display-id: u32);
+    
+    /// Swaps the front and back buffer of a display, if there is one.
+    /// TODO: should this invalidate the grapics-context connection? Since the connected buffer changes.
+    blit: func(display-id: u32);
+    
+}

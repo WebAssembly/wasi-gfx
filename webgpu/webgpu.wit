@@ -946,12 +946,6 @@ interface webgpu {
     beginning-of-pass-write-index: option<gpu-size32>,
     end-of-pass-write-index: option<gpu-size32>,
   }
-  record gpu-render-pass-layout {
-    color-formats: list<option<gpu-texture-format>>,
-    depth-stencil-format: option<gpu-texture-format>,
-    sample-count: option<gpu-size32>,
-    label: option<string>,
-  }
   record gpu-render-bundle-encoder-descriptor {
     depth-read-only: option<bool>,
     stencil-read-only: option<bool>,

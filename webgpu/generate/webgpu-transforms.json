@@ -974,5 +974,15 @@
                 }
             }
         ]
+    },
+    {
+        "reason": "GPURenderPassLayout is only used as the base of GPURenderBundleEncoderDescriptor. Since wit doesn't have inheritance the fields are duplicated in the child so no need for the parent.",
+        "operations": [
+            {
+                "operation": {
+                    "remove-type": "gpu-render-pass-layout"
+                }
+            }
+        ]
     }
 ]

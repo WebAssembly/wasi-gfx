@@ -2,3 +2,8 @@
 path = "../graphics-context"
 sha256 = "cf022dcf41c7e9f6d3ca8af2f80f523306472a5548d38199d57986fc75aafb7b"
 sha512 = "b5cf0248f2cd1dbfbeb500b375e56fecbe8b1ac147b1aece73032543e696e0f7dad3da5aa99fbade290369a065059ae606def00d7d1aa94cde7f19ee03741479"
+
+[io]
+url = "https://github.com/WebAssembly/wasi-io/archive/fef02cddb4ac28dcde97bf11a4c7b856833a948f.tar.gz"
+sha256 = "7210e5653539a15478f894d4da24cc69d61924cbcba21d2804d69314a88e5a4c"
+sha512 = "49184a1b0945a889abd52d25271172ed3dc2db6968fcdddb1bab7ee0081f4a3eeee0977ad2291126a37631c0d86eeea75d822fa8af224c422134500bf9f0f2bb"

@@ -70,7 +70,7 @@ interface webgpu {
     limits: func() -> gpu-supported-limits;
     info: func() -> gpu-adapter-info;
     is-fallback-adapter: func() -> bool;
-    request-device: func(descriptor: option<gpu-device-descriptor>) -> gpu-device;
+    request-device: func(descriptor: option<gpu-device-descriptor>) -> result<gpu-device, request-device-error>;
   }
   resource record-option-gpu-size64 {
     constructor();
@@ -116,16 +116,16 @@ interface webgpu {
     create-shader-module: func(descriptor: gpu-shader-module-descriptor) -> gpu-shader-module;
     create-compute-pipeline: func(descriptor: gpu-compute-pipeline-descriptor) -> gpu-compute-pipeline;
     create-render-pipeline: func(descriptor: gpu-render-pipeline-descriptor) -> gpu-render-pipeline;
-    create-compute-pipeline-async: func(descriptor: gpu-compute-pipeline-descriptor) -> gpu-compute-pipeline;
-    create-render-pipeline-async: func(descriptor: gpu-render-pipeline-descriptor) -> gpu-render-pipeline;
+    create-compute-pipeline-async: func(descriptor: gpu-compute-pipeline-descriptor) -> result<gpu-compute-pipeline, create-pipeline-error>;
+    create-render-pipeline-async: func(descriptor: gpu-render-pipeline-descriptor) -> result<gpu-render-pipeline, create-pipeline-error>;
     create-command-encoder: func(descriptor: option<gpu-command-encoder-descriptor>) -> gpu-command-encoder;
     create-render-bundle-encoder: func(descriptor: gpu-render-bundle-encoder-descriptor) -> gpu-render-bundle-encoder;
-    create-query-set: func(descriptor: gpu-query-set-descriptor) -> gpu-query-set;
+    create-query-set: func(descriptor: gpu-query-set-descriptor) -> result<gpu-query-set, create-query-set-error>;
     label: func() -> string;
     set-label: func(label: string);
     lost: func() -> gpu-device-lost-info;
     push-error-scope: func(filter: gpu-error-filter);
-    pop-error-scope: func() -> option<gpu-error>;
+    pop-error-scope: func() -> result<option<gpu-error>, pop-error-scope-error>;
     onuncapturederror-subscribe: func() -> pollable;
     connect-graphics-context: func(context: borrow<context>);
   }
@@ -133,13 +133,13 @@ interface webgpu {
     size: func() -> gpu-size64-out;
     usage: func() -> gpu-flags-constant;
     map-state: func() -> gpu-buffer-map-state;
-    map-async: func(mode: gpu-map-mode-flags, offset: option<gpu-size64>, size: option<gpu-size64>);
-    get-mapped-range-get-cloned: func(offset: option<gpu-size64>, size: option<gpu-size64>) -> list<u8>;
-    unmap: func();
+    map-async: func(mode: gpu-map-mode-flags, offset: option<gpu-size64>, size: option<gpu-size64>) -> result<_, map-async-error>;
+    get-mapped-range-get-cloned: func(offset: option<gpu-size64>, size: option<gpu-size64>) -> result<list<u8>, get-mapped-range-error>;
+    unmap: func() -> result<_, unmap-error>;
     destroy: func();
     label: func() -> string;
     set-label: func(label: string);
-    get-mapped-range-set-cloned: func(data: list<u8>, offset: option<gpu-size64>, size: option<gpu-size64>);
+    get-mapped-range-set-cloned: func(data: list<u8>, offset: option<gpu-size64>, size: option<gpu-size64>) -> result<_, get-mapped-range-error>;
   }
   enum gpu-buffer-map-state {
     unmapped,
@@ -424,16 +424,9 @@ interface webgpu {
   resource gpu-compilation-info {
     messages: func() -> list<gpu-compilation-message>;
   }
-  resource gpu-pipeline-error {
-    constructor(message: option<string>, options: gpu-pipeline-error-init);
-    reason: func() -> gpu-pipeline-error-reason;
-  }
   enum gpu-pipeline-error-reason {
     validation,
     internal,
-  }
-  record gpu-pipeline-error-init {
-    reason: gpu-pipeline-error-reason,
   }
   variant gpu-layout-mode {
     specific(borrow<gpu-pipeline-layout>),
@@ -659,7 +652,7 @@ interface webgpu {
     push-debug-group: func(group-label: string);
     pop-debug-group: func();
     insert-debug-marker: func(marker-label: string);
-    set-bind-group: func(index: gpu-index32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets-data: option<list<gpu-buffer-dynamic-offset>>, dynamic-offsets-data-start: option<gpu-size64>, dynamic-offsets-data-length: option<gpu-size32>);
+    set-bind-group: func(index: gpu-index32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets-data: option<list<gpu-buffer-dynamic-offset>>, dynamic-offsets-data-start: option<gpu-size64>, dynamic-offsets-data-length: option<gpu-size32>) -> result<_, set-bind-group-error>;
   }
   resource gpu-render-pass-encoder {
     set-viewport: func(x: f32, y: f32, width: f32, height: f32, min-depth: f32, max-depth: f32);
@@ -675,7 +668,7 @@ interface webgpu {
     push-debug-group: func(group-label: string);
     pop-debug-group: func();
     insert-debug-marker: func(marker-label: string);
-    set-bind-group: func(index: gpu-index32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets-data: option<list<gpu-buffer-dynamic-offset>>, dynamic-offsets-data-start: option<gpu-size64>, dynamic-offsets-data-length: option<gpu-size32>);
+    set-bind-group: func(index: gpu-index32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets-data: option<list<gpu-buffer-dynamic-offset>>, dynamic-offsets-data-start: option<gpu-size64>, dynamic-offsets-data-length: option<gpu-size32>) -> result<_, set-bind-group-error>;
     set-pipeline: func(pipeline: borrow<gpu-render-pipeline>);
     set-index-buffer: func(buffer: borrow<gpu-buffer>, index-format: gpu-index-format, offset: option<gpu-size64>, size: option<gpu-size64>);
     set-vertex-buffer: func(slot: gpu-index32, buffer: option<borrow<gpu-buffer>>, offset: option<gpu-size64>, size: option<gpu-size64>);
@@ -706,7 +699,7 @@ interface webgpu {
     push-debug-group: func(group-label: string);
     pop-debug-group: func();
     insert-debug-marker: func(marker-label: string);
-    set-bind-group: func(index: gpu-index32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets-data: option<list<gpu-buffer-dynamic-offset>>, dynamic-offsets-data-start: option<gpu-size64>, dynamic-offsets-data-length: option<gpu-size32>);
+    set-bind-group: func(index: gpu-index32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets-data: option<list<gpu-buffer-dynamic-offset>>, dynamic-offsets-data-start: option<gpu-size64>, dynamic-offsets-data-length: option<gpu-size32>) -> result<_, set-bind-group-error>;
     set-pipeline: func(pipeline: borrow<gpu-render-pipeline>);
     set-index-buffer: func(buffer: borrow<gpu-buffer>, index-format: gpu-index-format, offset: option<gpu-size64>, size: option<gpu-size64>);
     set-vertex-buffer: func(slot: gpu-index32, buffer: option<borrow<gpu-buffer>>, offset: option<gpu-size64>, size: option<gpu-size64>);
@@ -727,7 +720,7 @@ interface webgpu {
   resource gpu-queue {
     submit: func(command-buffers: list<borrow<gpu-command-buffer>>);
     on-submitted-work-done: func();
-    write-buffer-cloned: func(buffer: borrow<gpu-buffer>, buffer-offset: gpu-size64, data: list<u8>, data-offset: option<gpu-size64>, size: option<gpu-size64>);
+    write-buffer-cloned: func(buffer: borrow<gpu-buffer>, buffer-offset: gpu-size64, data: list<u8>, data-offset: option<gpu-size64>, size: option<gpu-size64>) -> result<_, write-buffer-error>;
     write-texture-cloned: func(destination: gpu-texel-copy-texture-info, data: list<u8>, data-layout: gpu-texel-copy-buffer-layout, size: gpu-extent3-d);
     label: func() -> string;
     set-label: func(label: string);
@@ -779,18 +772,7 @@ interface webgpu {
   }
   resource gpu-error {
     message: func() -> string;
-  }
-  resource gpu-validation-error {
-    message: func() -> string;
-    constructor(message: string);
-  }
-  resource gpu-out-of-memory-error {
-    message: func() -> string;
-    constructor(message: string);
-  }
-  resource gpu-internal-error {
-    message: func() -> string;
-    constructor(message: string);
+    kind: func() -> gpu-error-kind;
   }
   enum gpu-error-filter {
     validation,
@@ -798,11 +780,7 @@ interface webgpu {
     internal,
   }
   resource gpu-uncaptured-error-event {
-    constructor(%type: string, gpu-uncaptured-error-event-init-dict: gpu-uncaptured-error-event-init);
     error: func() -> gpu-error;
-  }
-  record gpu-uncaptured-error-event-init {
-    error: borrow<gpu-error>,
   }
   type gpu-buffer-dynamic-offset = u32;
   type gpu-stencil-value = u32;
@@ -1031,4 +1009,77 @@ interface webgpu {
     display-p3,
   }
   get-gpu: func() -> gpu;
+  variant gpu-error-kind {
+    validation-error,
+    out-of-memory-error,
+    internal-error,
+  }
+  variant request-device-error-kind {
+    type-error,
+    operation-error,
+  }
+  record request-device-error {
+    kind: request-device-error-kind,
+    message: string,
+  }
+  variant create-pipeline-error-kind {
+    gpu-pipeline-error(gpu-pipeline-error-reason),
+  }
+  record create-pipeline-error {
+    kind: create-pipeline-error-kind,
+    message: string,
+  }
+  variant create-query-set-error-kind {
+    type-error,
+  }
+  record create-query-set-error {
+    kind: create-query-set-error-kind,
+    message: string,
+  }
+  variant pop-error-scope-error-kind {
+    operation-error,
+  }
+  record pop-error-scope-error {
+    kind: pop-error-scope-error-kind,
+    message: string,
+  }
+  variant map-async-error-kind {
+    operation-error,
+    range-error,
+    abort-error,
+  }
+  record map-async-error {
+    kind: map-async-error-kind,
+    message: string,
+  }
+  variant get-mapped-range-error-kind {
+    operation-error,
+    range-error,
+    type-error,
+  }
+  record get-mapped-range-error {
+    kind: get-mapped-range-error-kind,
+    message: string,
+  }
+  variant unmap-error-kind {
+    abort-error,
+  }
+  record unmap-error {
+    kind: unmap-error-kind,
+    message: string,
+  }
+  variant set-bind-group-error-kind {
+    range-error,
+  }
+  record set-bind-group-error {
+    kind: set-bind-group-error-kind,
+    message: string,
+  }
+  variant write-buffer-error-kind {
+    operation-error,
+  }
+  record write-buffer-error {
+    kind: write-buffer-error-kind,
+    message: string,
+  }
 }

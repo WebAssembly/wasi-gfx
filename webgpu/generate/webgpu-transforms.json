@@ -1024,5 +1024,792 @@
                 }
             }
         ]
+    },
+    {
+        "reason": "Errors have the message field raised to the top level type so that they don't have to be taken out of the inner error. Important if we allow new error types in the future that the developer has not yet handled. They also get a `kind` to enable detecting the error type. `kind` is a variant and not an enum so that they can have fields inside like `pipeline-error.reason`. Note: not changing gpu-error to a record even though errors added by us are records, because GPUError is an interface in the spec, and might one day gain interface like properties",
+        "operations": [
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "gpu-error-kind",
+                        "kind": {
+                            "variant": {
+                                "cases": [
+                                    { "name": "validation-error" },
+                                    { "name": "out-of-memory-error" },
+                                    { "name": "internal-error" }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "add-resource-func": {
+                        "resource": "gpu-error",
+                        "func": {
+                            "kind": {
+                                "method": [
+                                    "kind",
+                                    {
+                                        "anon": {
+                                            "named": "gpu-error-kind"
+                                        }
+                                    }
+                                ]
+                            },
+                            "params": {
+                                "items": []
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "remove-type": "gpu-validation-error"
+                }
+            },
+            {
+                "operation": {
+                    "remove-type": "gpu-out-of-memory-error"
+                }
+            },
+            {
+                "operation": {
+                    "remove-type": "gpu-internal-error"
+                }
+            }
+        ]
+    },
+    {
+        "reason": "Remove gpu-uncaptured-error-event constructor as it's not useful, it's only here because of web specific rules. https://github.com/gpuweb/gpuweb/pull/255#issuecomment-477308123 and https://w3ctag.github.io/design-principles/#constructors",
+        "operations": [
+            {
+                "operation": {
+                    "remove-func": {
+                        "resource": "gpu-uncaptured-error-event",
+                        "func": "constructor"
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "remove-type": "gpu-uncaptured-error-event-init"
+                }
+            }
+        ]
+    },
+    {
+        "reason": "request-device can throw for various reasons. https://www.w3.org/TR/webgpu/#dom-gpuadapter-requestdevice",
+        "operations": [
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "request-device-error-kind",
+                        "kind": {
+                            "variant": {
+                                "cases": [
+                                    {
+                                        "name": "type-error"
+                                    },
+                                    {
+                                        "name": "operation-error"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "request-device-error",
+                        "kind": {
+                            "record": {
+                                "fields": [
+                                    {
+                                        "name": "kind",
+                                        "type": {
+                                            "named": "request-device-error-kind"
+                                        }
+                                    },
+                                    {
+                                        "name": "message",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "vars": {
+                    "$_SUCCESS": {
+                        "find-type": {
+                            "func-results-anon": {
+                                "resource": "gpu-adapter",
+                                "func": "request-device"
+                            }
+                        }
+                    }
+                },
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-adapter",
+                        "func": "request-device",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "ok": "$_SUCCESS",
+                                    "err": {
+                                        "named": "request-device-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "reason": "create-*-pipeline-async throws if pipeline creation fails. https://www.w3.org/TR/webgpu/#async-pipeline-creation",
+        "operations": [
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "create-pipeline-error-kind",
+                        "kind": {
+                            "variant": {
+                                "cases": [
+                                    {
+                                        "name": "gpu-pipeline-error",
+                                        "type": {
+                                            "named": "gpu-pipeline-error-reason"
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "create-pipeline-error",
+                        "kind": {
+                            "record": {
+                                "fields": [
+                                    {
+                                        "name": "kind",
+                                        "type": {
+                                            "named": "create-pipeline-error-kind"
+                                        }
+                                    },
+                                    {
+                                        "name": "message",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "vars": {
+                    "$_SUCCESS": {
+                        "find-type": {
+                            "func-results-anon": {
+                                "resource": "gpu-device",
+                                "func": "create-compute-pipeline-async"
+                            }
+                        }
+                    }
+                },
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-device",
+                        "func": "create-compute-pipeline-async",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "ok": "$_SUCCESS",
+                                    "err": {
+                                        "named": "create-pipeline-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "vars": {
+                    "$_SUCCESS": {
+                        "find-type": {
+                            "func-results-anon": {
+                                "resource": "gpu-device",
+                                "func": "create-render-pipeline-async"
+                            }
+                        }
+                    }
+                },
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-device",
+                        "func": "create-render-pipeline-async",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "ok": "$_SUCCESS",
+                                    "err": {
+                                        "named": "create-pipeline-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "remove-type": "gpu-pipeline-error"
+                }
+            },
+            {
+                "operation": {
+                    "remove-type": "gpu-pipeline-error-init"
+                }
+            }
+        ]
+    },
+    {
+        "reason": "create-query-set throws if descriptor.type is 'timestamp', but 'timestamp-query' is not enabled for this device. https://www.w3.org/TR/webgpu/#dom-gpudevice-createqueryset",
+        "operations": [
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "create-query-set-error-kind",
+                        "kind": {
+                            "variant": {
+                                "cases": [
+                                    {
+                                        "name": "type-error"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "create-query-set-error",
+                        "kind": {
+                            "record": {
+                                "fields": [
+                                    {
+                                        "name": "kind",
+                                        "type": {
+                                            "named": "create-query-set-error-kind"
+                                        }
+                                    },
+                                    {
+                                        "name": "message",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "vars": {
+                    "$_SUCCESS": {
+                        "find-type": {
+                            "func-results-anon": {
+                                "resource": "gpu-device",
+                                "func": "create-query-set"
+                            }
+                        }
+                    }
+                },
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-device",
+                        "func": "create-query-set",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "ok": "$_SUCCESS",
+                                    "err": {
+                                        "named": "create-query-set-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "reason": "pop-error-scope throws if the error-scope stack is empty. https://www.w3.org/TR/webgpu/#dom-gpudevice-poperrorscope",
+        "operations": [
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "pop-error-scope-error-kind",
+                        "kind": {
+                            "variant": {
+                                "cases": [
+                                    {
+                                        "name": "operation-error"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "pop-error-scope-error",
+                        "kind": {
+                            "record": {
+                                "fields": [
+                                    {
+                                        "name": "kind",
+                                        "type": {
+                                            "named": "pop-error-scope-error-kind"
+                                        }
+                                    },
+                                    {
+                                        "name": "message",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "vars": {
+                    "$_SUCCESS": {
+                        "find-type": {
+                            "func-results-anon": {
+                                "resource": "gpu-device",
+                                "func": "pop-error-scope"
+                            }
+                        }
+                    }
+                },
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-device",
+                        "func": "pop-error-scope",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "ok": "$_SUCCESS",
+                                    "err": {
+                                        "named": "pop-error-scope-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "reason": "map-async can throw for various reasons. https://www.w3.org/TR/webgpu/#dom-gpubuffer-mapasync",
+        "operations": [
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "map-async-error-kind",
+                        "kind": {
+                            "variant": {
+                                "cases": [
+                                    {
+                                        "name": "operation-error"
+                                    },
+                                    {
+                                        "name": "range-error"
+                                    },
+                                    {
+                                        "name": "abort-error"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "map-async-error",
+                        "kind": {
+                            "record": {
+                                "fields": [
+                                    {
+                                        "name": "kind",
+                                        "type": {
+                                            "named": "map-async-error-kind"
+                                        }
+                                    },
+                                    {
+                                        "name": "message",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-buffer",
+                        "func": "map-async",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "err": {
+                                        "named": "map-async-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "reason": "get-mapped-range can throw for various reasons. https://www.w3.org/TR/webgpu/#dom-gpubuffer-getmappedrange",
+        "operations": [
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "get-mapped-range-error-kind",
+                        "kind": {
+                            "variant": {
+                                "cases": [
+                                    {
+                                        "name": "operation-error"
+                                    },
+                                    {
+                                        "name": "range-error"
+                                    },
+                                    {
+                                        "name": "type-error"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "get-mapped-range-error",
+                        "kind": {
+                            "record": {
+                                "fields": [
+                                    {
+                                        "name": "kind",
+                                        "type": {
+                                            "named": "get-mapped-range-error-kind"
+                                        }
+                                    },
+                                    {
+                                        "name": "message",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "vars": {
+                    "$_SUCCESS": {
+                        "find-type": {
+                            "func-results-anon": {
+                                "resource": "gpu-buffer",
+                                "func": "get-mapped-range-get-cloned"
+                            }
+                        }
+                    }
+                },
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-buffer",
+                        "func": "get-mapped-range-get-cloned",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "ok": "$_SUCCESS",
+                                    "err": {
+                                        "named": "get-mapped-range-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-buffer",
+                        "func": "get-mapped-range-set-cloned",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "err": {
+                                        "named": "get-mapped-range-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "reason": "unmap throws if called while future returned by map-async is still pending. https://www.w3.org/TR/webgpu/#dom-gpubuffer-unmap",
+        "operations": [
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "unmap-error-kind",
+                        "kind": {
+                            "variant": {
+                                "cases": [
+                                    {
+                                        "name": "abort-error"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "unmap-error",
+                        "kind": {
+                            "record": {
+                                "fields": [
+                                    {
+                                        "name": "kind",
+                                        "type": {
+                                            "named": "unmap-error-kind"
+                                        }
+                                    },
+                                    {
+                                        "name": "message",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-buffer",
+                        "func": "unmap",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "err": {
+                                        "named": "unmap-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "reason": "set-bind-group throws if dynamic-offsets-data-start/length don't fit in dynamic-offsets-data. https://www.w3.org/TR/webgpu/#dom-gpubindingcommandsmixin-setbindgroup-index-bindgroup-dynamicoffsetsdata-dynamicoffsetsdatastart-dynamicoffsetsdatalength",
+        "operations": [
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "set-bind-group-error-kind",
+                        "kind": {
+                            "variant": {
+                                "cases": [
+                                    {
+                                        "name": "range-error"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "set-bind-group-error",
+                        "kind": {
+                            "record": {
+                                "fields": [
+                                    {
+                                        "name": "kind",
+                                        "type": {
+                                            "named": "set-bind-group-error-kind"
+                                        }
+                                    },
+                                    {
+                                        "name": "message",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-compute-pass-encoder",
+                        "func": "set-bind-group",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "err": {
+                                        "named": "set-bind-group-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-render-pass-encoder",
+                        "func": "set-bind-group",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "err": {
+                                        "named": "set-bind-group-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-render-bundle-encoder",
+                        "func": "set-bind-group",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "err": {
+                                        "named": "set-bind-group-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "reason": "write-buffer can throw for various reasons. https://www.w3.org/TR/webgpu/#dom-gpuqueue-writebuffer",
+        "operations": [
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "write-buffer-error-kind",
+                        "kind": {
+                            "variant": {
+                                "cases": [
+                                    {
+                                        "name": "operation-error"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "add-type": {
+                        "name": "write-buffer-error",
+                        "kind": {
+                            "record": {
+                                "fields": [
+                                    {
+                                        "name": "kind",
+                                        "type": {
+                                            "named": "write-buffer-error-kind"
+                                        }
+                                    },
+                                    {
+                                        "name": "message",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "retype-func-results": {
+                        "resource": "gpu-queue",
+                        "func": "write-buffer-cloned",
+                        "new-results": {
+                            "anon": {
+                                "result": {
+                                    "err": {
+                                        "named": "write-buffer-error"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ]
     }
 ]

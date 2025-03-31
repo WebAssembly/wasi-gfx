@@ -1,0 +1,3 @@
+[submodule "webgpu/generate/webgpu-spec"]
+	path = webgpu/generate/webgpu-spec
+	url = https://github.com/gpuweb/gpuweb.git

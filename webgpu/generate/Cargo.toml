@@ -1,0 +1,12 @@
+[package]
+name = "generate"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+webidl2wit = { git = "https://github.com/wasi-gfx/webidl2wit", rev = "582c5a959fb98073cfcc60514964b417b5394e36" }
+weedle = "0.13.0"
+wit-transforms = { git = "https://github.com/wasi-gfx/wit-transforms", rev = "d05dfeeba5e3cd5f52ecfd4bbbc917ba8fa5786c" }
+wit-parser = "0.220.0"
+wit-encoder = "0.220.0"
+serde_json = "1.0.139"

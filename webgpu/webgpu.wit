@@ -1,13 +1,8 @@
 package wasi:webgpu;
 
-world imports {
-  import webgpu;
-}
-
 interface webgpu {
-  use wasi:graphics-context/graphics-context.{context, abstract-buffer};
-
-  get-gpu: func() -> gpu;
+  use wasi:io/poll@0.2.0.{ pollable };
+  use wasi:graphics-context/graphics-context.{ context, abstract-buffer };
   resource gpu-supported-limits {
     max-texture-dimension1-d: func() -> u32;
     max-texture-dimension2-d: func() -> u32;
@@ -52,6 +47,8 @@ interface webgpu {
     architecture: func() -> string;
     device: func() -> string;
     description: func() -> string;
+    subgroup-min-size: func() -> u32;
+    subgroup-max-size: func() -> u32;
   }
   resource gpu {
     request-adapter: func(options: option<gpu-request-adapter-options>) -> option<gpu-adapter>;
@@ -63,8 +60,10 @@ interface webgpu {
     high-performance,
   }
   record gpu-request-adapter-options {
+    feature-level: option<string>,
     power-preference: option<gpu-power-preference>,
     force-fallback-adapter: option<bool>,
+    xr-compatible: option<bool>,
   }
   resource gpu-adapter {
     features: func() -> gpu-supported-features;
@@ -73,15 +72,15 @@ interface webgpu {
     is-fallback-adapter: func() -> bool;
     request-device: func(descriptor: option<gpu-device-descriptor>) -> gpu-device;
   }
-  resource record-gpu-size64 {
+  resource record-option-gpu-size64 {
     constructor();
-    add: func(key: string, value: gpu-size64);
-    get: func(key: string) -> gpu-size64;
+    add: func(key: string, value: option<gpu-size64>);
+    get: func(key: string) -> option<option<gpu-size64>>;
     has: func(key: string) -> bool;
     remove: func(key: string);
     keys: func() -> list<string>;
-    values: func() -> list<gpu-size64>;
-    entries: func() -> tuple<string, gpu-size64>;
+    values: func() -> list<option<gpu-size64>>;
+    entries: func() -> list<tuple<string, option<gpu-size64>>>;
   }
   enum gpu-feature-name {
     depth-clip-control,
@@ -90,26 +89,22 @@ interface webgpu {
     texture-compression-bc-sliced3d,
     texture-compression-etc2,
     texture-compression-astc,
+    texture-compression-astc-sliced3d,
     timestamp-query,
     indirect-first-instance,
     shader-f16,
     rg11b10ufloat-renderable,
     bgra8unorm-storage,
     float32-filterable,
+    float32-blendable,
     clip-distances,
     dual-source-blending,
-  }
-  record gpu-device-configuration {
-    format: gpu-texture-format,
-    usage: option<gpu-texture-usage-flags>,
-    view-formats: option<list<gpu-texture-format>>,
-    color-space: option<predefined-color-space>,
-    alpha-mode: option<gpu-canvas-alpha-mode>,
+    subgroups,
   }
   resource gpu-device {
-    connect-graphics-context: func(context: borrow<context>);
     features: func() -> gpu-supported-features;
     limits: func() -> gpu-supported-limits;
+    adapter-info: func() -> gpu-adapter-info;
     queue: func() -> gpu-queue;
     destroy: func();
     create-buffer: func(descriptor: gpu-buffer-descriptor) -> gpu-buffer;
@@ -131,19 +126,20 @@ interface webgpu {
     lost: func() -> gpu-device-lost-info;
     push-error-scope: func(filter: gpu-error-filter);
     pop-error-scope: func() -> option<gpu-error>;
-    uncaptured-errors: func();
-    configure: func(configuration: gpu-device-configuration);
+    onuncapturederror-subscribe: func() -> pollable;
+    connect-graphics-context: func(context: borrow<context>);
   }
   resource gpu-buffer {
     size: func() -> gpu-size64-out;
     usage: func() -> gpu-flags-constant;
     map-state: func() -> gpu-buffer-map-state;
     map-async: func(mode: gpu-map-mode-flags, offset: option<gpu-size64>, size: option<gpu-size64>);
-    get-mapped-range: func(offset: option<gpu-size64>, size: option<gpu-size64>) -> non-standard-buffer;
+    get-mapped-range-get-cloned: func(offset: option<gpu-size64>, size: option<gpu-size64>) -> list<u8>;
     unmap: func();
     destroy: func();
     label: func() -> string;
     set-label: func(label: string);
+    get-mapped-range-set-cloned: func(data: list<u8>, offset: option<gpu-size64>, size: option<gpu-size64>);
   }
   enum gpu-buffer-map-state {
     unmapped,
@@ -169,7 +165,6 @@ interface webgpu {
     WRITE: static func() -> gpu-flags-constant;
   }
   resource gpu-texture {
-    from-graphics-buffer: static func(buffer: abstract-buffer) -> gpu-texture;
     create-view: func(descriptor: option<gpu-texture-view-descriptor>) -> gpu-texture-view;
     destroy: func();
     width: func() -> gpu-integer-coordinate-out;
@@ -182,6 +177,7 @@ interface webgpu {
     usage: func() -> gpu-flags-constant;
     label: func() -> string;
     set-label: func(label: string);
+    from-graphics-buffer: static func(buffer: abstract-buffer) -> gpu-texture;
   }
   enum gpu-texture-dimension {
     d1,
@@ -404,7 +400,7 @@ interface webgpu {
     set-label: func(label: string);
   }
   record gpu-pipeline-layout-descriptor {
-    bind-group-layouts: list<borrow<gpu-bind-group-layout>>,
+    bind-group-layouts: list<option<borrow<gpu-bind-group-layout>>>,
     label: option<string>,
   }
   resource gpu-shader-module {
@@ -458,12 +454,12 @@ interface webgpu {
   resource record-gpu-pipeline-constant-value {
     constructor();
     add: func(key: string, value: gpu-pipeline-constant-value);
-    get: func(key: string) -> gpu-pipeline-constant-value;
+    get: func(key: string) -> option<gpu-pipeline-constant-value>;
     has: func(key: string) -> bool;
     remove: func(key: string);
     keys: func() -> list<string>;
     values: func() -> list<gpu-pipeline-constant-value>;
-    entries: func() -> tuple<string, gpu-pipeline-constant-value>;
+    entries: func() -> list<tuple<string, gpu-pipeline-constant-value>>;
   }
   record gpu-programmable-stage {
     module: borrow<gpu-shader-module>,
@@ -584,25 +580,34 @@ interface webgpu {
     unclipped-depth: option<bool>,
   }
   enum gpu-vertex-format {
+    uint8,
     uint8x2,
     uint8x4,
+    sint8,
     sint8x2,
     sint8x4,
+    unorm8,
     unorm8x2,
     unorm8x4,
+    snorm8,
     snorm8x2,
     snorm8x4,
+    uint16,
     uint16x2,
     uint16x4,
+    sint16,
     sint16x2,
     sint16x4,
+    unorm16,
     unorm16x2,
     unorm16x4,
+    snorm16,
     snorm16x2,
     snorm16x4,
+    float16,
     float16x2,
     float16x4,
-    %float32,
+    float32,
     float32x2,
     float32x3,
     float32x4,
@@ -615,6 +620,7 @@ interface webgpu {
     sint32x3,
     sint32x4,
     unorm1010102,
+    unorm8x4-bgra,
   }
   enum gpu-vertex-step-mode {
     vertex,
@@ -631,9 +637,9 @@ interface webgpu {
     begin-render-pass: func(descriptor: gpu-render-pass-descriptor) -> gpu-render-pass-encoder;
     begin-compute-pass: func(descriptor: option<gpu-compute-pass-descriptor>) -> gpu-compute-pass-encoder;
     copy-buffer-to-buffer: func(source: borrow<gpu-buffer>, source-offset: gpu-size64, destination: borrow<gpu-buffer>, destination-offset: gpu-size64, size: gpu-size64);
-    copy-buffer-to-texture: func(source: gpu-image-copy-buffer, destination: gpu-image-copy-texture, copy-size: gpu-extent3-d);
-    copy-texture-to-buffer: func(source: gpu-image-copy-texture, destination: gpu-image-copy-buffer, copy-size: gpu-extent3-d);
-    copy-texture-to-texture: func(source: gpu-image-copy-texture, destination: gpu-image-copy-texture, copy-size: gpu-extent3-d);
+    copy-buffer-to-texture: func(source: gpu-texel-copy-buffer-info, destination: gpu-texel-copy-texture-info, copy-size: gpu-extent3-d);
+    copy-texture-to-buffer: func(source: gpu-texel-copy-texture-info, destination: gpu-texel-copy-buffer-info, copy-size: gpu-extent3-d);
+    copy-texture-to-texture: func(source: gpu-texel-copy-texture-info, destination: gpu-texel-copy-texture-info, copy-size: gpu-extent3-d);
     clear-buffer: func(buffer: borrow<gpu-buffer>, offset: option<gpu-size64>, size: option<gpu-size64>);
     resolve-query-set: func(query-set: borrow<gpu-query-set>, first-query: gpu-size32, query-count: gpu-size32, destination: borrow<gpu-buffer>, destination-offset: gpu-size64);
     finish: func(descriptor: option<gpu-command-buffer-descriptor>) -> gpu-command-buffer;
@@ -656,7 +662,7 @@ interface webgpu {
     push-debug-group: func(group-label: string);
     pop-debug-group: func();
     insert-debug-marker: func(marker-label: string);
-    set-bind-group: func(index: gpu-index32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets: option<list<gpu-buffer-dynamic-offset>>);
+    set-bind-group: func(index: gpu-index32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets-data: option<list<gpu-buffer-dynamic-offset>>, dynamic-offsets-data-start: option<gpu-size64>, dynamic-offsets-data-length: option<gpu-size32>);
   }
   resource gpu-render-pass-encoder {
     set-viewport: func(x: f32, y: f32, width: f32, height: f32, min-depth: f32, max-depth: f32);
@@ -672,7 +678,7 @@ interface webgpu {
     push-debug-group: func(group-label: string);
     pop-debug-group: func();
     insert-debug-marker: func(marker-label: string);
-    set-bind-group: func(index: gpu-index32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets: option<list<gpu-buffer-dynamic-offset>>);
+    set-bind-group: func(index: gpu-index32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets-data: option<list<gpu-buffer-dynamic-offset>>, dynamic-offsets-data-start: option<gpu-size64>, dynamic-offsets-data-length: option<gpu-size32>);
     set-pipeline: func(pipeline: borrow<gpu-render-pipeline>);
     set-index-buffer: func(buffer: borrow<gpu-buffer>, index-format: gpu-index-format, offset: option<gpu-size64>, size: option<gpu-size64>);
     set-vertex-buffer: func(slot: gpu-index32, buffer: option<borrow<gpu-buffer>>, offset: option<gpu-size64>, size: option<gpu-size64>);
@@ -703,7 +709,7 @@ interface webgpu {
     push-debug-group: func(group-label: string);
     pop-debug-group: func();
     insert-debug-marker: func(marker-label: string);
-    set-bind-group: func(index: gpu-index32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets: option<list<gpu-buffer-dynamic-offset>>);
+    set-bind-group: func(index: gpu-index32, bind-group: option<borrow<gpu-bind-group>>, dynamic-offsets-data: option<list<gpu-buffer-dynamic-offset>>, dynamic-offsets-data-start: option<gpu-size64>, dynamic-offsets-data-length: option<gpu-size32>);
     set-pipeline: func(pipeline: borrow<gpu-render-pipeline>);
     set-index-buffer: func(buffer: borrow<gpu-buffer>, index-format: gpu-index-format, offset: option<gpu-size64>, size: option<gpu-size64>);
     set-vertex-buffer: func(slot: gpu-index32, buffer: option<borrow<gpu-buffer>>, offset: option<gpu-size64>, size: option<gpu-size64>);
@@ -717,15 +723,15 @@ interface webgpu {
   }
   record gpu-device-descriptor {
     required-features: option<list<gpu-feature-name>>,
-    required-limits: option<record-gpu-size64>,
+    required-limits: option<record-option-gpu-size64>,
     default-queue: option<gpu-queue-descriptor>,
     label: option<string>,
   }
   resource gpu-queue {
     submit: func(command-buffers: list<borrow<gpu-command-buffer>>);
     on-submitted-work-done: func();
-    write-buffer: func(buffer: borrow<gpu-buffer>, buffer-offset: gpu-size64, data-offset: option<gpu-size64>, data: list<u8>, size: option<gpu-size64>);
-    write-texture: func(destination: gpu-image-copy-texture, data: list<u8>, data-layout: gpu-image-data-layout, size: gpu-extent3-d);
+    write-buffer-cloned: func(buffer: borrow<gpu-buffer>, buffer-offset: gpu-size64, data: list<u8>, data-offset: option<gpu-size64>, size: option<gpu-size64>);
+    write-texture-cloned: func(destination: gpu-texel-copy-texture-info, data: list<u8>, data-layout: gpu-texel-copy-buffer-layout, size: gpu-extent3-d);
     label: func() -> string;
     set-label: func(label: string);
   }
@@ -743,6 +749,7 @@ interface webgpu {
   resource gpu-canvas-context {
     configure: func(configuration: gpu-canvas-configuration);
     unconfigure: func();
+    get-configuration: func() -> option<gpu-canvas-configuration-owned>;
     get-current-texture: func() -> gpu-texture;
   }
   enum gpu-canvas-alpha-mode {
@@ -914,12 +921,12 @@ interface webgpu {
     layout: gpu-layout,
     label: option<string>,
   }
-  record gpu-image-data-layout {
+  record gpu-texel-copy-buffer-layout {
     offset: option<gpu-size64>,
     bytes-per-row: option<gpu-size32>,
     rows-per-image: option<gpu-size32>,
   }
-  record gpu-image-copy-buffer {
+  record gpu-texel-copy-buffer-info {
     buffer: borrow<gpu-buffer>,
     offset: option<gpu-size64>,
     bytes-per-row: option<gpu-size32>,
@@ -990,13 +997,13 @@ interface webgpu {
     y: option<gpu-integer-coordinate>,
     z: option<gpu-integer-coordinate>,
   }
-  record gpu-image-copy-texture {
+  record gpu-texel-copy-texture-info {
     texture: borrow<gpu-texture>,
     mip-level: option<gpu-integer-coordinate>,
     origin: option<gpu-origin3-d>,
     aspect: option<gpu-texture-aspect>,
   }
-  record gpu-image-copy-texture-tagged {
+  record gpu-copy-external-image-dest-info {
     color-space: option<predefined-color-space>,
     premultiplied-alpha: option<bool>,
     texture: borrow<gpu-texture>,
@@ -1019,13 +1026,18 @@ interface webgpu {
     view-formats: option<list<gpu-texture-format>>,
     label: option<string>,
   }
+  record gpu-canvas-configuration-owned {
+    device: gpu-device,
+    format: gpu-texture-format,
+    usage: option<gpu-texture-usage-flags>,
+    view-formats: option<list<gpu-texture-format>>,
+    color-space: option<predefined-color-space>,
+    tone-mapping: option<gpu-canvas-tone-mapping>,
+    alpha-mode: option<gpu-canvas-alpha-mode>,
+  }
   enum predefined-color-space {
     srgb,
     display-p3,
   }
-  // TODO: This should be replcated with something that doesn't require a copy.
-  resource non-standard-buffer {
-    get: func() -> list<u8>;
-    set: func(val: list<u8>);
-  }
+  get-gpu: func() -> gpu;
 }

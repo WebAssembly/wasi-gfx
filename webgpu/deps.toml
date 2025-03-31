@@ -1,2 +1,4 @@
+io = "https://github.com/WebAssembly/wasi-io/archive/fef02cddb4ac28dcde97bf11a4c7b856833a948f.tar.gz"
+
 [graphics-context]
 path = "../graphics-context"

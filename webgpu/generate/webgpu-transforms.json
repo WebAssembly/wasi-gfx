@@ -829,13 +829,13 @@
         ]
     },
     {
-        "reason": "Simplify naming of gpu-layout",
+        "reason": "Simplify naming of gpu-layout-mode, and merge gpu-auto-layout-mode cases into gpu-layout-mode",
         "operations": [
             {
                 "operation": {
                     "rename-type": {
                         "from" : "gpu-auto-layout-mode-or-gpu-pipeline-layout",
-                        "to" : "gpu-layout"
+                        "to" : "gpu-layout-mode"
                     }
                 }
             },
@@ -843,8 +843,48 @@
                 "operation": {
                     "replace-refs": {
                         "old": "gpu-auto-layout-mode-or-gpu-pipeline-layout",
-                        "new": "gpu-layout"
+                        "new": "gpu-layout-mode"
                     }
+                }
+            },
+            {
+                "operation": {
+                    "rename-variant-case": {
+                        "variant": "gpu-layout-mode",
+                        "old-case-name": "gpu-pipeline-layout",
+                        "new-case-name": "specific"
+                    }
+                }
+            },
+            {
+                "vars": {
+                    "$_CASES": {
+                        "find-string-list": {
+                            "enum-cases": {
+                                "enum": "gpu-auto-layout-mode"
+                            },
+                            "convert-to": "variant-cases"
+                        }
+                    }
+                },
+                "operation": {
+                    "add-variant-cases": {
+                        "variant": "gpu-layout-mode",
+                        "cases": "$_CASES"
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "remove-variant-case": {
+                        "variant": "gpu-layout-mode",
+                        "case": "gpu-auto-layout-mode"
+                    }
+                }
+            },
+            {
+                "operation": {
+                    "remove-type": "gpu-auto-layout-mode"
                 }
             }
         ]

@@ -435,16 +435,13 @@ interface webgpu {
   record gpu-pipeline-error-init {
     reason: gpu-pipeline-error-reason,
   }
-  enum gpu-auto-layout-mode {
+  variant gpu-layout-mode {
+    specific(borrow<gpu-pipeline-layout>),
     auto,
-  }
-  variant gpu-layout {
-    gpu-auto-layout-mode(gpu-auto-layout-mode),
-    gpu-pipeline-layout(borrow<gpu-pipeline-layout>),
   }
   record gpu-shader-module-compilation-hint {
     entry-point: string,
-    layout: option<gpu-layout>,
+    layout: option<gpu-layout-mode>,
   }
   record gpu-shader-module-descriptor {
     code: string,
@@ -474,7 +471,7 @@ interface webgpu {
   }
   record gpu-compute-pipeline-descriptor {
     compute: gpu-programmable-stage,
-    layout: gpu-layout,
+    layout: gpu-layout-mode,
     label: option<string>,
   }
   resource gpu-render-pipeline {
@@ -918,7 +915,7 @@ interface webgpu {
     depth-stencil: option<gpu-depth-stencil-state>,
     multisample: option<gpu-multisample-state>,
     fragment: option<gpu-fragment-state>,
-    layout: gpu-layout,
+    layout: gpu-layout-mode,
     label: option<string>,
   }
   record gpu-texel-copy-buffer-layout {

@@ -1,4 +1,4 @@
-package wasi:frame-buffer;
+package wasi:frame-buffer@0.0.1;
 
 world imports {
   import frame-buffer;

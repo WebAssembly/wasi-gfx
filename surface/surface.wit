@@ -1,4 +1,4 @@
-package wasi:surface;
+package wasi:surface@0.0.1;
 
 world imports {
   import surface;

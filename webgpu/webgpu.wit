@@ -134,12 +134,12 @@ interface webgpu {
     usage: func() -> gpu-flags-constant;
     map-state: func() -> gpu-buffer-map-state;
     map-async: func(mode: gpu-map-mode-flags, offset: option<gpu-size64>, size: option<gpu-size64>) -> result<_, map-async-error>;
-    get-mapped-range-get-cloned: func(offset: option<gpu-size64>, size: option<gpu-size64>) -> result<list<u8>, get-mapped-range-error>;
+    get-mapped-range-get-with-copy: func(offset: option<gpu-size64>, size: option<gpu-size64>) -> result<list<u8>, get-mapped-range-error>;
     unmap: func() -> result<_, unmap-error>;
     destroy: func();
     label: func() -> string;
     set-label: func(label: string);
-    get-mapped-range-set-cloned: func(data: list<u8>, offset: option<gpu-size64>, size: option<gpu-size64>) -> result<_, get-mapped-range-error>;
+    get-mapped-range-set-with-copy: func(data: list<u8>, offset: option<gpu-size64>, size: option<gpu-size64>) -> result<_, get-mapped-range-error>;
   }
   enum gpu-buffer-map-state {
     unmapped,
@@ -720,8 +720,8 @@ interface webgpu {
   resource gpu-queue {
     submit: func(command-buffers: list<borrow<gpu-command-buffer>>);
     on-submitted-work-done: func();
-    write-buffer-cloned: func(buffer: borrow<gpu-buffer>, buffer-offset: gpu-size64, data: list<u8>, data-offset: option<gpu-size64>, size: option<gpu-size64>) -> result<_, write-buffer-error>;
-    write-texture-cloned: func(destination: gpu-texel-copy-texture-info, data: list<u8>, data-layout: gpu-texel-copy-buffer-layout, size: gpu-extent3-d);
+    write-buffer-with-copy: func(buffer: borrow<gpu-buffer>, buffer-offset: gpu-size64, data: list<u8>, data-offset: option<gpu-size64>, size: option<gpu-size64>) -> result<_, write-buffer-error>;
+    write-texture-with-copy: func(destination: gpu-texel-copy-texture-info, data: list<u8>, data-layout: gpu-texel-copy-buffer-layout, size: gpu-extent3-d);
     label: func() -> string;
     set-label: func(label: string);
   }

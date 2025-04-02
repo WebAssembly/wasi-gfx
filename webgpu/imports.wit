@@ -1,4 +1,4 @@
-package wasi:webgpu;
+package wasi:webgpu@0.0.1;
 
 world imports {
   import webgpu;

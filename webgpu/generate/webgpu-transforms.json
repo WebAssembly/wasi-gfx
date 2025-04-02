@@ -970,7 +970,7 @@
                 "operation": {
                     "add-use": {
                         "use": {
-                            "target": "wasi:graphics-context/graphics-context",
+                            "target": "wasi:graphics-context/graphics-context@0.0.1",
                             "use-names-list": [
                                 [ "context", null ],
                                 [ "abstract-buffer", null ]

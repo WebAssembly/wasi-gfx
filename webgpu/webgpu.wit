@@ -2,7 +2,7 @@ package wasi:webgpu@0.0.1;
 
 interface webgpu {
   use wasi:io/poll@0.2.0.{ pollable };
-  use wasi:graphics-context/graphics-context.{ context, abstract-buffer };
+  use wasi:graphics-context/graphics-context@0.0.1.{ context, abstract-buffer };
   resource gpu-supported-limits {
     max-texture-dimension1-d: func() -> u32;
     max-texture-dimension2-d: func() -> u32;

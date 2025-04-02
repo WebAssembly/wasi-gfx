@@ -5,7 +5,7 @@ world imports {
 }
 
 interface surface {
-  use wasi:graphics-context/graphics-context.{context};
+  use wasi:graphics-context/graphics-context@0.0.1.{context};
   use wasi:io/poll@0.2.0.{pollable};
 
   record create-desc {

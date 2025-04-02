@@ -536,7 +536,7 @@
                     "rename-func": {
                         "resource": "gpu-queue",
                         "old-func-name": "write-buffer",
-                        "new-func-name": "write-buffer-cloned"
+                        "new-func-name": "write-buffer-with-copy"
                     }
                 }
             },
@@ -557,7 +557,7 @@
                     "rename-func": {
                         "resource": "gpu-queue",
                         "old-func-name": "write-texture",
-                        "new-func-name": "write-texture-cloned"
+                        "new-func-name": "write-texture-with-copy"
                     }
                 }
             },
@@ -938,7 +938,7 @@
                     "rename-func": {
                         "resource": "gpu-buffer",
                         "old-func-name": "get-mapped-range",
-                        "new-func-name": "get-mapped-range-get-cloned"
+                        "new-func-name": "get-mapped-range-get-with-copy"
                     }
                 }
             },
@@ -948,7 +948,7 @@
                         "resource": "gpu-buffer",
                         "func": {
                             "kind": {
-                                "method": ["get-mapped-range-set-cloned", { "named": { "items": [] } }]
+                                "method": ["get-mapped-range-set-with-copy", { "named": { "items": [] } }]
                             },
                             "params": {
                                 "items": [
@@ -1554,7 +1554,7 @@
                         "find-type": {
                             "func-results-anon": {
                                 "resource": "gpu-buffer",
-                                "func": "get-mapped-range-get-cloned"
+                                "func": "get-mapped-range-get-with-copy"
                             }
                         }
                     }
@@ -1562,7 +1562,7 @@
                 "operation": {
                     "retype-func-results": {
                         "resource": "gpu-buffer",
-                        "func": "get-mapped-range-get-cloned",
+                        "func": "get-mapped-range-get-with-copy",
                         "new-results": {
                             "anon": {
                                 "result": {
@@ -1580,7 +1580,7 @@
                 "operation": {
                     "retype-func-results": {
                         "resource": "gpu-buffer",
-                        "func": "get-mapped-range-set-cloned",
+                        "func": "get-mapped-range-set-with-copy",
                         "new-results": {
                             "anon": {
                                 "result": {
@@ -1797,7 +1797,7 @@
                 "operation": {
                     "retype-func-results": {
                         "resource": "gpu-queue",
-                        "func": "write-buffer-cloned",
+                        "func": "write-buffer-with-copy",
                         "new-results": {
                             "anon": {
                                 "result": {

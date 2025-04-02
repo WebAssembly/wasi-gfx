@@ -10,3 +10,4 @@ wit-transforms = { git = "https://github.com/wasi-gfx/wit-transforms", rev = "d0
 wit-parser = "0.220.0"
 wit-encoder = "0.220.0"
 serde_json = "1.0.139"
+semver = "1.0.26"

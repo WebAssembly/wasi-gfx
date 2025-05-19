@@ -106,6 +106,11 @@
             },
             {
                 "operation": {
+                    "remove-type": "gpu-copy-external-image-dest-info"
+                }
+            },
+            {
+                "operation": {
                     "remove-type": "html-canvas-element-or-html-image-element-or-html-video-element-or-image-bitmap-or-image-data-or-offscreen-canvas-or-video-frame"
                 }
             },

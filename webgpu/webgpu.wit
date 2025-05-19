@@ -972,14 +972,6 @@ interface webgpu {
     origin: option<gpu-origin3-d>,
     aspect: option<gpu-texture-aspect>,
   }
-  record gpu-copy-external-image-dest-info {
-    color-space: option<predefined-color-space>,
-    premultiplied-alpha: option<bool>,
-    texture: borrow<gpu-texture>,
-    mip-level: option<gpu-integer-coordinate>,
-    origin: option<gpu-origin3-d>,
-    aspect: option<gpu-texture-aspect>,
-  }
   record gpu-extent3-d {
     width: gpu-integer-coordinate,
     height: option<gpu-integer-coordinate>,

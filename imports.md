@@ -2,11 +2,11 @@
 <ul>
 <li>Imports:
 <ul>
-<li>interface <a href="#wasi_webgpu_webgpu_0_3_0_rc_2"><code>wasi:webgpu/webgpu@0.2.0-rc.2</code></a></li>
+<li>interface <a href="#wasi_webgpu_webgpu_0_3_0_rc_2"><code>wasi:webgpu/webgpu@0.3.0-rc.2</code></a></li>
 </ul>
 </li>
 </ul>
-<h2><a id="wasi_webgpu_webgpu_0_3_0_rc_2"></a>Import interface wasi:webgpu/webgpu@0.2.0-rc.2</h2>
+<h2><a id="wasi_webgpu_webgpu_0_3_0_rc_2"></a>Import interface wasi:webgpu/webgpu@0.3.0-rc.2</h2>
 <hr />
 <h3>Types</h3>
 <h4><a id="create_query_set_error_kind"></a><code>variant create-query-set-error-kind</code></h4>

@@ -2,6 +2,17 @@ name: Prepare Release
 
 on:
   workflow_dispatch:
+    inputs:
+      bump:
+        description: "Which part to bump"
+        type: choice
+        required: true
+        default: rc
+        options:
+          - rc
+          - patch
+          - minor
+          - major
 
 jobs:
   prepare:
@@ -15,13 +26,38 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Determine next RC version
+      - name: Determine next version
         id: version
+        env:
+          BUMP: ${{ inputs.bump }}
         run: |
-          # Find highest RC number from existing tags
+          # Determine current base version (X.Y.Z) from the package version
+          CURRENT=$(grep -oP 'package wasi:webgpu@\K[^;]+' wit/imports.wit)
+          BASE="${CURRENT%%-rc.*}"
+          if [[ ! "$BASE" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "Error: Could not determine base version from '$CURRENT'"
+            exit 1
+          fi
+          MAJOR="${BASH_REMATCH[1]}"
+          MINOR="${BASH_REMATCH[2]}"
+          PATCH="${BASH_REMATCH[3]}"
+
+          # Compute the target base version for the requested bump.
+          # rc keeps the same base and just increments the RC number;
+          # patch/minor/major move to a new base and restart at rc.1.
+          case "$BUMP" in
+            rc)    ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            *) echo "Error: Unknown bump type '$BUMP'"; exit 1 ;;
+          esac
+          BASE="${MAJOR}.${MINOR}.${PATCH}"
+
+          # Find highest RC number from existing tags for this base version
           HIGHEST_RC=0
-          for tag in $(git tag -l 'v0.2.0-rc.*'); do
-            if [[ "$tag" =~ ^v0\.2\.0-rc\.([0-9]+)$ ]]; then
+          for tag in $(git tag -l "v${BASE}-rc.*"); do
+            if [[ "$tag" =~ ^v${BASE}-rc\.([0-9]+)$ ]]; then
               RC_NUM="${BASH_REMATCH[1]}"
               if [ "$RC_NUM" -gt "$HIGHEST_RC" ]; then
                 HIGHEST_RC="$RC_NUM"
@@ -30,7 +66,7 @@ jobs:
           done
 
           NEXT_RC=$((HIGHEST_RC + 1))
-          VERSION="0.2.0-rc.${NEXT_RC}"
+          VERSION="${BASE}-rc.${NEXT_RC}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Preparing version: $VERSION"
 

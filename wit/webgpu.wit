@@ -1,4 +1,4 @@
-package wasi:webgpu@0.2.0-rc.2;
+package wasi:webgpu@0.3.0-rc.2;
 
 interface webgpu {
   record create-pipeline-error {
